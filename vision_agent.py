@@ -16,7 +16,7 @@ class Vision_Agent:
     def __init__(self):
         self.converter = 0
         self.image = cv2.imread('Parcours.png')
-        self.hsv = cv2.cvtColor(slef.image, cv2.COLOR_BGR2HSV)
+        self.hsv = cv2.cvtColor(self.image, cv2.COLOR_BGR2HSV)
         self.angle = 0
         self.center_robot = [0,0]
         self.parcours = np.zeros((50,50), np.uint8)
