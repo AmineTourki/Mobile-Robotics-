@@ -129,7 +129,7 @@ class Vision_Agent:
             cv2.rectangle(self.image,(x,y),(x+w,y+h),(0,0,0),2)
             
     def get_pix_2_real(self):
-        return self.r_in_real/sel.r_in_pix
+        return self.r_in_real/self.r_in_pix
     
     def update(self):
         self.read_image()
