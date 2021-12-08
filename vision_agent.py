@@ -9,13 +9,14 @@ import cv2
 import numpy as np
 import pygame
 import math
+import time
 
 
 class Vision_Agent:
     def __init__(self):
         self.converter = 0
         self.image = cv2.imread('Parcours.png')
-        self.hsv = cv2.cvtColor(self.image, cv2.COLOR_BGR2HSV)
+        self.hsv = cv2.cvtColor(slef.image, cv2.COLOR_BGR2HSV)
         self.angle = 0
         self.center_robot = [0,0]
         self.parcours = np.zeros((50,50), np.uint8)
@@ -129,13 +130,22 @@ class Vision_Agent:
             
     def get_pix_2_real(self):
         return self.r_in_real/sel.r_in_pix
+    
+    def update(self):
+        self.read_image()
+        self.get_robot()
+        self.get_objectives()
+        self.get_obstacles()
+         
         
 Vision = Vision_Agent()
+start = time.time()
 Vision.read_image()
 Vision.get_robot()
 Vision.get_objectives()
 Vision.get_obstacles()
-print(Vision.parcours[0])
+# print(time.time()-start)
+# print(Vision.parcours)
 while(True):
     cv2.imshow('Image', Vision.image)   
     cv2.imshow('Parcours', Vision.parcours)   
