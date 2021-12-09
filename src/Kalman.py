@@ -10,7 +10,7 @@ R = np.array([[0.01,0,0],[0,0.01,0],[0,0,0.01]])
 Q = np.array([[0.12306,0,0],[0,0.12306,0],[0,0,m.pi/60]])
 P = np.diag([100,100,m.pi/4])
 
-def Kalman_update(X_est_priori, P_est_priori, X_measure):
+def kalman_update(X_est_priori, P_est_priori, X_measure):
     """
     Update step of the Kalman filter
     :param: X_est_priori: A priori estimation of the position
@@ -46,7 +46,7 @@ def Kalman_update(X_est_priori, P_est_priori, X_measure):
 #             [0,1,v*t_sampling*cos(alpha)],
 #             [0,0,1]])
 
-def Kalman_estimate(X_previous,P_previous,delta_t,speed):
+def kalman_estimate(X_previous,P_previous,delta_t,speed):
     """
     Estimation step of the Kalman filter
     :param: X_previous: previous position and orientation of the robot
@@ -71,7 +71,7 @@ def Kalman_estimate(X_previous,P_previous,delta_t,speed):
 
     return X_priori,P_priori
 
-def Kalman_filter(X_previous,P_previous,X_measure,delta_t,speed):
+def kalman_filter(X_previous,P_previous,X_measure,delta_t,speed):
     """
     Kalman filter with estimation and update steps
     :param: X_previous: previous position and orientation of the robot
@@ -83,23 +83,24 @@ def Kalman_filter(X_previous,P_previous,X_measure,delta_t,speed):
     """
     global P
 
-    X_priori , P_priori = Kalman_estimate(X_previous, P_previous, delta_t, speed)
-    X_est_post,P = Kalman_update(X_priori, P_priori, X_measure)
+    X_priori , P_priori = kalman_estimate(X_previous, P_previous, delta_t, speed)
+    X_est_post,P = kalman_update(X_priori, P_priori, X_measure)
 
     # return the position in nod
     nod_x = int(X_est_post[0]/NOD_SIZE_CM)
     nod_y = int(X_est_post[1]/NOD_SIZE_CM)
     return nod_x, nod_y ,X_est_post[2]
 
-def Kalman_init(nod_cm,pixel_cm):
+def kalman_init(vision):
     """
     initialise the movement covariance and size of pixel in cm
-    :param nod_cm: size in cm of a cell in the map grid
-    :param pixel_cm: size of a pixel in cm
+    :param vision: instance from the vision class
     """
     global NOD_SIZE_CM
     global R
 
-    NOD_SIZE_CM = nod_cm
+    NOD_SIZE_CM = vision.get_grid_2_real()
     # uncertainty of 4 pixel
-    R = np.array([[5*pixel_cm,0,0],[0,5*pixel_cm,0],[0,0,m.pi/40]])
+    R = np.array([[5*vision.get_pix_2_real(),0,0],
+                  [0,5*vision.get_pix_2_real(),0],
+                  [0,0,m.pi/40]])
