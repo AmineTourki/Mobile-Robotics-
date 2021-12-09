@@ -92,6 +92,11 @@ def Kalman_filter(X_previous,P_previous,X_measure,delta_t,speed):
     return nod_x, nod_y ,X_est_post[2]
 
 def Kalman_init(nod_cm,pixel_cm):
+    """
+    initialise the movement covariance and size of pixel in cm
+    :param nod_cm: size in cm of a cell in the map grid
+    :param pixel_cm: size of a pixel in cm
+    """
     global NOD_SIZE_CM
     global R
 
