@@ -11,10 +11,15 @@ import pygame
 import math
 import time
 
+print(cv2.__version__)
+
+# cam = cv2.VideoCapture(0)
 
 class Vision_Agent:
     def __init__(self):
         self.converter = 0
+        # self.cam = cv2.VideoCapture(0)
+        # ret, frame = cam.read() 
         self.image = cv2.imread('Parcours.png')
         self.hsv = cv2.cvtColor(self.image, cv2.COLOR_BGR2HSV)
         self.angle = 0
@@ -118,6 +123,7 @@ class Vision_Agent:
         #Find my contours
         contours =cv2.findContours(Canny,cv2.RETR_LIST,cv2.CHAIN_APPROX_SIMPLE)[1]
     
+        
         for cnt in contours:
             
             x,y,w,h=cv2.boundingRect(cnt)
@@ -130,6 +136,10 @@ class Vision_Agent:
             
     def get_pix_2_real(self):
         return self.r_in_real/self.r_in_pix
+    
+    def get_grid_2_real(self):
+        an_array = np.array( self.parcours_2_pix)
+        return  an_array * self.get_pix_2_real()
     
     def update(self):
         self.read_image()
@@ -146,7 +156,9 @@ Vision.get_objectives()
 Vision.get_obstacles()
 # print(time.time()-start)
 # print(Vision.parcours)
+print(Vision.get_grid_2_real())
 while(True):
+    # Vision.read_image()
     cv2.imshow('Image', Vision.image)   
     cv2.imshow('Parcours', Vision.parcours)   
     if cv2.waitKey(1) == ord("q"):
