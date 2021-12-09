@@ -2,8 +2,6 @@
 import time
 import numpy as np
 import math as m
-import os
-import sys
 import Kalman
 
 import utils
@@ -67,18 +65,17 @@ def go_to(myRobot, next_pos):
 
 def callKalman(myRobot, Vision, speed, Ts):
     """
-
-    :param myRobot:
-    :param Vision:
-    :param speed:
-    :param Ts:
-    :return:
+    call Kalman and update our robot's position
+    :param myRobot: our robot
+    :param Vision: our vision agent
+    :param speed: speed of the motors of our robot
+    :param Ts: time spent between 2 calls of Kalman
     """
     Vision.read_image()
     Vision.get_robot()
     vision_measure = np.array([Vision.x, Vision.y, utils.deg_to_rad(Vision.angle)])
 
-    x, y, theta = Kalman.Kalman_filter(myRobot.get_previous_pos(), vision_measure, Ts, speed)
+    x, y, theta = Kalman.kalman_filter(myRobot.get_previous_pos(), vision_measure, Ts, speed)
 
     myRobot.set_pos(x, y)
     myRobot.set_theta(theta)
