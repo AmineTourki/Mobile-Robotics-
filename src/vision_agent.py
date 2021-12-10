@@ -112,7 +112,7 @@ class Vision_Agent:
         Canny= cv2.Canny(mask_black,10,50)
         
         #Find my contours
-        contours =cv2.findContours(Canny,cv2.RETR_LIST,cv2.CHAIN_APPROX_SIMPLE)[1]
+        contours =cv2.findContours(Canny,cv2.RETR_LIST,cv2.CHAIN_APPROX_SIMPLE)[0]
         # print(contours)
         
         #Loop through my contours to find rectangles and put them in a list, so i can view them individually later.
@@ -135,7 +135,7 @@ class Vision_Agent:
         Canny=cv2.Canny(mask_green,10,50)
         # self.parcours = mask_red
         #Find my contours
-        contours =cv2.findContours(Canny,cv2.RETR_LIST,cv2.CHAIN_APPROX_SIMPLE)[1]
+        contours =cv2.findContours(Canny,cv2.RETR_LIST,cv2.CHAIN_APPROX_SIMPLE)[0]
         
         for cnt in contours:
             
@@ -152,7 +152,7 @@ class Vision_Agent:
         Canny=cv2.Canny(mask_red,10,50)
         
         #Find my contours
-        contours =cv2.findContours(Canny,cv2.RETR_LIST,cv2.CHAIN_APPROX_SIMPLE)[1]
+        contours =cv2.findContours(Canny,cv2.RETR_LIST,cv2.CHAIN_APPROX_SIMPLE)[0]
         # print(contours)
         
         for cnt in contours:
@@ -315,27 +315,27 @@ class Vision_Agent:
         warpedImage = cv2.warpAffine(warpedImage, M, (w, h))
         self.image = warpedImage
   
-start = time.time()      
+start = time.time()
 Vision = Vision_Agent()
 
-j=time.time()-start
+# j=time.time()-start
+# # print(j)
+# f = time.time()
+# Vision.read_image()
+# j=time.time()-f
 # print(j)
-f = time.time()
-Vision.read_image()
-j=time.time()-f
-print(j)
-Vision.get_robot()
-Vision.get_objectives()
-Vision.get_obstacles()
-
-# print(Vision.parcours)
-# print(Vision.get_grid_2_real())
-while(True):
-    # Vision.read_image()
-    
-    cv2.imshow('Image', Vision.image)   
-    cv2.imshow('Parcours', Vision.parcours)   
-    if cv2.waitKey(1) == ord("q"):
-       break
-   
-cv2.destroyAllWindows()
+# Vision.get_robot()
+# Vision.get_objectives()
+# Vision.get_obstacles()
+#
+# #print(Vision.parcours)
+# # print(Vision.get_grid_2_real())
+# while(True):
+#     # Vision.read_image()
+#
+#     cv2.imshow('Image', Vision.image)
+#     cv2.imshow('Parcours', Vision.parcours)
+#     if cv2.waitKey(1) == ord("q"):
+#        break
+#
+# cv2.destroyAllWindows()

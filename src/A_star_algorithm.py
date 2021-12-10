@@ -176,7 +176,10 @@ def run_A_Star(occupancy_grid, start, goal):
     # Define the heuristic, here = distance to goal ignoring obstacles
     h = np.linalg.norm(pos - goal, axis=-1)
     h = dict(zip(coords, h))
-
+    print(start)
+    print(goal)
+    for line in occupancy_grid:
+        print(line)
     # Run the A* algorithm with movement 8N
     path, visitedNodes = A_Star(start, goal, h, coords, occupancy_grid, movement_type="8N")
     path = np.array(path)
