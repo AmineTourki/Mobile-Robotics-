@@ -11,8 +11,14 @@ import numpy as np
 
 # Read a image
 I = cv2.imread('parcours2.jpeg')
-hsv = cv2.cvtColor(I, cv2.COLOR_BGR2HSV)
 
+scale_percent = 30 # percent of original size
+width = int(I.shape[1] * scale_percent / 100)
+height = int(I.shape[0] * scale_percent / 100)
+dim = (width, height)
+# resize image
+I = cv2.resize(I, dim, interpolation = cv2.INTER_AREA)
+hsv = cv2.cvtColor(I, cv2.COLOR_BGR2HSV)
 # define range of white color in HSV
 lower_blue = np.array([0,0,50])
 upper_blue = np.array([255,255,255])
@@ -21,29 +27,25 @@ upper_blue = np.array([255,255,255])
 
 
 # Threshold the HSV image to get only blue colors
-mask = cv2.inRange(hsv, lower_blue, upper_blue)
-kernel = np.ones((150,150),np.uint8)
-mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
-kernel = np.ones((350,350),np.uint8)
-mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
 
-# dest = cv2.cornerHarris(mask, 5, 31, 0.1)
-# dest = cv2.dilate(dest, None)
-  
-# Reverting back to the original image,
-# with optimal threshold value
-# I[dest > 0.01 * dest.max()]=[0, 0, 255]
-mask_bg = np.zeros((len(mask) + 4, len(mask[0]) + 4),np.uint8)
-mask_bg[2:len(mask_bg)-2,2:len(mask_bg[0])-2]=mask
-corners = np.int0(cv2.goodFeaturesToTrack(mask_bg, 4, 0.1, 1000))
-print(len(corners))
+mask = cv2.inRange(hsv, lower_blue, upper_blue)
+mask_bg = np.zeros((len(mask) + 1000, len(mask[0]) + 1000),np.uint8)
+mask_bg[500:len(mask_bg)-500,500:len(mask_bg[0])-500]=mask
+kernel = np.ones((3,3),np.uint8)
+mask_bg = cv2.morphologyEx(mask_bg, cv2.MORPH_CLOSE, kernel)
+kernel = np.ones((50,50),np.uint8)
+mask_bg = cv2.morphologyEx(mask_bg, cv2.MORPH_OPEN, kernel)
+kernel = np.ones((150,150),np.uint8)
+
+mask_bg = cv2.morphologyEx(mask_bg, cv2.MORPH_CLOSE, kernel)
+mask = mask_bg[500:len(mask_bg)-500,500:len(mask_bg[0])-500]
+
+corners = np.int0(cv2.goodFeaturesToTrack(mask_bg, 4, 0.1, 100))
 polygon=[]
 for i in corners:
     x,y = i.ravel()
-    polygon.append([x-2,y-2])
-    # I = cv2.circle(I, (x-2,y-2), radius=0, color=(0, 0, 255), thickness=100)
-# Bitwise-AND mask and original image
-print(polygon)
+    polygon.append([x-500,y-500])
+
 polygon=[polygon]
 res = cv2.bitwise_and(I,I, mask= mask)
 
@@ -52,7 +54,7 @@ minX = I.shape[1]
 maxX = -1
 minY = I.shape[0]
 maxY = -1
-print(polygon[0][0])
+print(polygon[0])
 for point in polygon[0]:
 
     x = point[0]
@@ -86,7 +88,6 @@ for y in range(0,I.shape[0]):
 
 # Now we can crop again just the envloping rectangle
 finalImage = cropedImage[minY:maxY,minX:maxX]
-
 
 
 
@@ -126,6 +127,6 @@ while(True):
     cv2.imshow('Mask', mask)
     cv2.imshow('WarpedImage', cropedImage)
     if cv2.waitKey(1) == ord("q"):
-       break
+        break
    
 cv2.destroyAllWindows()
