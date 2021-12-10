@@ -1,6 +1,6 @@
-
 import numpy as np
 import math
+
 
 def _get_movements_4n():
     """
@@ -11,6 +11,7 @@ def _get_movements_4n():
             (0, 1, 1.0),
             (-1, 0, 1.0),
             (0, -1, 1.0)]
+
 
 def _get_movements_8n():
     """
@@ -46,15 +47,18 @@ def reconstruct_path(cameFrom, current):
     return total_path
 
 
-def A_Star(start, goal, h, coords, occupancy_grid, movement_type="4N",):
+def A_Star(start, goal, h, coords, occupancy_grid, movement_type="4N", ):
     """
     A* for 2D occupancy grid. Finds a path from start to goal.
     h is the heuristic function. h(n) estimates the cost to reach goal from node n.
     :param start: start node (x, y)
-    :param goal_m: goal node (x, y)
+    :param goal: goal node (x, y)
+    :param h: h is the heuristic function. h(n) estimates the cost to reach goal from node n.
+    :param coords: List of all coordinates in the grid
     :param occupancy_grid: the grid map
-    :param movement: select between 4-connectivity ('4N') and 8-connectivity ('8N', default)
-    :return: a tuple that contains: (the resulting path in meters, the resulting path in data array indices)
+    :param movement_type: select between 4-connectivity ('4N') and 8-connectivity ('8N', default)
+    :return path: The array containing the optimal path from start to goal
+    :return vistedNodes: The array of explored nodes by the A* algorithm
     """
 
     # -----------------------------------------
@@ -62,8 +66,10 @@ def A_Star(start, goal, h, coords, occupancy_grid, movement_type="4N",):
     # -----------------------------------------
 
     # Check if the start and goal are within the boundaries of the map
-    assert start[0] in range(occupancy_grid.shape[1]) and start[1] in range(occupancy_grid.shape[0]), "Start location not contained in the map"
-    assert goal[0] in range(occupancy_grid.shape[1]) and goal[1] in range(occupancy_grid.shape[0]), "Goal location not contained in the map"
+    assert start[0] in range(occupancy_grid.shape[1]) and start[1] in range(
+        occupancy_grid.shape[0]), "Start location not contained in the map"
+    assert goal[0] in range(occupancy_grid.shape[1]) and goal[1] in range(
+        occupancy_grid.shape[0]), "Goal location not contained in the map"
 
     # check if start and goal nodes correspond to free spaces
     if occupancy_grid[start[0], start[1]]:
