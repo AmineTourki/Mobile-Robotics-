@@ -24,6 +24,7 @@ class Vision_Agent:
         self.resize()
         self.hsv = cv2.cvtColor(self.image, cv2.COLOR_BGR2HSV)
         self.get_first_image_cam(self.image)
+        self.image = cv2.flip(self.image, 1)
         self.hsv = cv2.cvtColor(self.image, cv2.COLOR_BGR2HSV)
         
         
@@ -49,6 +50,7 @@ class Vision_Agent:
         self.resize()
         self.hsv = cv2.cvtColor(self.image, cv2.COLOR_BGR2HSV)
         self.get_image_cam(self.image)
+        self.image = cv2.flip(self.image, 1)
         self.hsv = cv2.cvtColor(self.image, cv2.COLOR_BGR2HSV)
         
        
@@ -277,7 +279,7 @@ class Vision_Agent:
         (h, w) = warpedImage.shape[:2]
         center = (w / 2, h / 2)
         M = cv2.getRotationMatrix2D(center, angle180, scale)
-        warpedImage = cv2.warpAffine(warpedImage, M, (w, h))
+        # warpedImage = cv2.warpAffine(warpedImage, M, (w, h))
         self.image = warpedImage
     
     def get_image_cam(self, image):
