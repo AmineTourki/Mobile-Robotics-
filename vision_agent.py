@@ -322,7 +322,7 @@ class Vision_Agent:
         cv2.imshow('Image', Vision.image)   
         cv2.imshow('Parcours', Vision.parcours)
   
-start = time.time()      
+# start = time.time()      
 Vision = Vision_Agent()
 
 # j=time.time()-start
@@ -343,6 +343,6 @@ Vision = Vision_Agent()
 #     cv2.imshow('Image', Vision.image)   
 #     cv2.imshow('Parcours', Vision.parcours)   
 #     if cv2.waitKey(1) == ord("q"):
-#        break
+#         break
    
 # cv2.destroyAllWindows()
