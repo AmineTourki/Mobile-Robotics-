@@ -13,25 +13,24 @@ import time
 
 print(cv2.__version__)
 
-# cam = cv2.VideoCapture(0)
-
 class Vision_Agent:
     def __init__(self):
         self.converter = 0
-        self.cam = cv2.VideoCapture(0)
-        ret, frame = cam.read() 
-        self.image = cv2.imread(frame)
+        self.cam = cv2.VideoCapture(1)
+        ret, frame = self.cam.read() 
+        self.image = frame
         self.resize()
         self.hsv = cv2.cvtColor(self.image, cv2.COLOR_BGR2HSV)
-        self.get_first_image_cam(self.image)
-        self.image = cv2.flip(self.image, 1)
+        # self.get_first_image_cam(self.image)
+        # self.image = cv2.flip(self.image, 1)
+        # self.image = cv2.flip(self.image, 0)
         self.hsv = cv2.cvtColor(self.image, cv2.COLOR_BGR2HSV)
         
         
         self.angle = 0
         self.center_robot = [0,0]
         self.parcours = np.zeros((50,50), np.uint8)
-        self.parcours_2_pix=[len(self.image)/50,len(self.image[0])/50]
+        self.parcours_2_pix=[len(self.image[0])/50,len(self.image)/50]
         self.objective_red = None
         self.objective_green = None
         self.r_in_pix = 0
@@ -46,12 +45,13 @@ class Vision_Agent:
         self.image = cv2.resize(self.image, dim, interpolation = cv2.INTER_AREA)
         
     def read_image(self):
-        ret, frame = cam.read() 
-        self.image = cv2.imread(frame)
+        ret, frame = self.cam.read() 
+        self.image = frame
         self.resize()
         self.hsv = cv2.cvtColor(self.image, cv2.COLOR_BGR2HSV)
-        self.get_image_cam(self.image)
-        self.image = cv2.flip(self.image, 1)
+        # self.get_image_cam(self.image)
+        # self.image = cv2.flip(self.image, 1)
+        # self.image = cv2.flip(self.image, 0)
         self.hsv = cv2.cvtColor(self.image, cv2.COLOR_BGR2HSV)
         
        
@@ -72,10 +72,16 @@ class Vision_Agent:
         
     def get_robot(self):
         
-        mask_blue = self.mask_thresh(self.hsv, [100,37,100], [134,255,150])
-        mask_blue = self.redefine_mask(mask_blue)
-        circles = cv2.HoughCircles(mask_blue, cv2.HOUGH_GRADIENT,2,10, param1=50, param2=15 , minRadius=0,maxRadius=30)
-        
+        mask_blue = self.mask_thresh(self.hsv, [100,37,85], [164,255,150])
+        # mask_blue = self.redefine_mask(mask_blue)
+        # kernel = np.ones((5,5),np.uint8)
+        # mask_blue = cv2.morphologyEx(mask_blue, cv2.MORPH_OPEN, kernel)
+        # self.parcours = mask_blue
+        # circles = cv2.HoughCircles(mask_blue, cv2.HOUGH_GRADIENT,2,4, param1=70, param2=30 , minRadius=0,maxRadius=100)
+        circles = cv2.HoughCircles(mask_blue, cv2.HOUGH_GRADIENT,2,10, param1=30, param2=10 , minRadius=3,maxRadius=3)
+
+        # circles = cv2.HoughCircles(mask_blue, cv2.HOUGH_GRADIENT,2,10, param1=30, param2=5 , minRadius=3,maxRadius=7)
+        # print(len(circles[0]))
         detected_circles = np.uint16(np.around(circles))
         center_points = []
         rayons=[]
@@ -83,12 +89,12 @@ class Vision_Agent:
         
         for (x,y,r) in detected_circles[0,:]:
             cv2.circle(self.image,(x,y),r,(0,255,0),3)
-            cv2.circle(self.image,(x,y),2,(0,255,255),3)
+            # cv2.circle(self.image,(x,y),2,(0,255,255),3)
             rayons += [r]
             center_points += [x,y]
             self.center_robot[0]+=x/len(detected_circles[0,:])
             self.center_robot[1]+=y/len(detected_circles[0,:])
-        
+        self.center_robot = [math.floor(float(self.center_robot[0]/Vision.parcours_2_pix[0])),math.floor(float(self.center_robot[1]/Vision.parcours_2_pix[1]))]
         vec1 = 0
         vec2 = 0
         
@@ -109,9 +115,10 @@ class Vision_Agent:
         self.parcours = np.zeros((50,50), np.uint8)
         
         mask_black = self.mask_thresh(self.hsv, [0,0,0], [180,255,50])
-        mask_black = self.redefine_mask(mask_black)
-        kernel = np.ones((50,50),np.uint8)
-        mask_black = cv2.morphologyEx(mask_black, cv2.MORPH_CLOSE, kernel)
+        # mask_black = self.redefine_mask(mask_black)
+      
+        kernel = np.ones((12,12),np.uint8)
+        mask_black = cv2.morphologyEx(mask_black, cv2.MORPH_OPEN, kernel)
         Canny= cv2.Canny(mask_black,10,50)
         
         #Find my contours
@@ -123,17 +130,21 @@ class Vision_Agent:
             x,y,w,h=cv2.boundingRect(cnt)
             cv2.rectangle(self.image,(x,y),(x+w,y+h),(255,255,0),2)
             cv2.rectangle(self.parcours,(int(x/self.parcours_2_pix[0]),int(y/self.parcours_2_pix[1])),(int((x+w)/self.parcours_2_pix[0]),int((y+h)/self.parcours_2_pix[1])),255,-1)
-         
+            # print((x+w)/self.parcours_2_pix[0])
         kernel = np.ones((1,1),np.uint8) 
         self.parcours = cv2.dilate(self.parcours,kernel,iterations = 1)/255
+        # self.parcours = mask_black
         
     def get_objectives(self):
         # define range of objective colors in HSV
         mask_red = self.mask_thresh(self.hsv, [150,70,50], [190,255,255])
         mask_green = self.mask_thresh(self.hsv, [40,40,40], [100,255,255])
+        kernel = np.ones((12,12),np.uint8)
+        mask_red = cv2.morphologyEx(mask_red, cv2.MORPH_OPEN, kernel)
+        mask_green = cv2.morphologyEx(mask_green, cv2.MORPH_OPEN, kernel)
         mask_green = self.redefine_mask(mask_green)
         mask_red = self.redefine_mask(mask_red)
-        
+        # self.parcours = mask_green
         
         Canny=cv2.Canny(mask_green,10,50)
         # self.parcours = mask_red
@@ -150,6 +161,7 @@ class Vision_Agent:
             cv2.circle(self.image, (int(x+w/2), int(y+h/2)), 7, (255, 255, 255), -1)
 
             self.objective_green = (x+w/2, y+h/2)
+            self.objective_green = [math.floor(float(self.objective_green[0]/Vision.parcours_2_pix[0])),math.floor(float(self.objective_green[1]/Vision.parcours_2_pix[1]))]
             cv2.rectangle(self.image,(x,y),(x+w,y+h),(0,0,0),2)
     
         Canny=cv2.Canny(mask_red,10,50)
@@ -167,6 +179,8 @@ class Vision_Agent:
             # cY = int(M["m01"] / M["m00"])
             cv2.circle(self.image, (int(x+w/2), int(y+h/2)), 7, (255, 255, 255), -1)
             self.objective_red = (x+w/2, y+h/2)
+            self.objective_red = [math.floor(float(self.objective_red[0]/Vision.parcours_2_pix[0])),math.floor(float(self.objective_red[1]/Vision.parcours_2_pix[1]))]
+
             cv2.rectangle(self.image,(x,y),(x+w,y+h),(0,0,0),2)
             
     def get_pix_2_real(self):
@@ -183,7 +197,7 @@ class Vision_Agent:
         self.get_obstacles()
     
     def get_first_image_cam(self, image):
-        mask = self.mask_thresh(self.hsv, [0,0,50], [190,255,255])
+        mask = self.mask_thresh(self.hsv, [0,0,40], [255,255,255])
         mask_bg = np.zeros((len(mask) + 1000, len(mask[0]) + 1000),np.uint8)
         mask_bg[500:len(mask_bg)-500,500:len(mask_bg[0])-500]=mask
         kernel = np.ones((3,3),np.uint8)
@@ -331,18 +345,25 @@ Vision = Vision_Agent()
 # Vision.read_image()
 # j=time.time()-f
 # print(j)
-# Vision.get_robot()
-# Vision.get_objectives()
-# Vision.get_obstacles()
+Vision.get_robot()
+Vision.get_objectives()
+Vision.get_obstacles()
 
-# # print(Vision.parcours)
-# # print(Vision.get_grid_2_real())
-# while(True):
-#     # Vision.read_image()
+# print(Vision.parcours)
+# print(Vision.get_grid_2_real())
+# print([math.floor(float(Vision.center_robot[0]/Vision.parcours_2_pix[0])),math.floor(float(Vision.center_robot[1]/Vision.parcours_2_pix[1]))])
+# print([math.floor(float(Vision.objective_green[0]/Vision.parcours_2_pix[0])),math.floor(float(Vision.objective_green[1]/Vision.parcours_2_pix[1]))])
+# print([math.floor(float(Vision.objective_red[0]/Vision.parcours_2_pix[0])),math.floor(float(Vision.objective_red[1]/Vision.parcours_2_pix[1]))])
+print(Vision.center_robot)
+print(Vision.objective_red)
+print(Vision.objective_green)
+
+while(True):
+    # Vision.read_image()
     
-#     cv2.imshow('Image', Vision.image)   
-#     cv2.imshow('Parcours', Vision.parcours)   
-#     if cv2.waitKey(1) == ord("q"):
-#         break
-   
-# cv2.destroyAllWindows()
+    cv2.imshow('Image', Vision.image)   
+    cv2.imshow('Parcours', Vision.parcours)   
+    if cv2.waitKey(1) == ord("q"):
+        break
+Vision.cam.realease()
+cv2.destroyAllWindows()
