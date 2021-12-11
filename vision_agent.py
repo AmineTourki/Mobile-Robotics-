@@ -18,9 +18,9 @@ print(cv2.__version__)
 class Vision_Agent:
     def __init__(self):
         self.converter = 0
-        # self.cam = cv2.VideoCapture(0)
-        # ret, frame = cam.read() 
-        self.image = cv2.imread('parcours2.jpeg')
+        self.cam = cv2.VideoCapture(0)
+        ret, frame = cam.read() 
+        self.image = cv2.imread(frame)
         self.resize()
         self.hsv = cv2.cvtColor(self.image, cv2.COLOR_BGR2HSV)
         self.get_first_image_cam(self.image)
@@ -46,7 +46,8 @@ class Vision_Agent:
         self.image = cv2.resize(self.image, dim, interpolation = cv2.INTER_AREA)
         
     def read_image(self):
-        self.image = cv2.imread('parcours2.jpeg')
+        ret, frame = cam.read() 
+        self.image = cv2.imread(frame)
         self.resize()
         self.hsv = cv2.cvtColor(self.image, cv2.COLOR_BGR2HSV)
         self.get_image_cam(self.image)
@@ -316,28 +317,30 @@ class Vision_Agent:
         M = cv2.getRotationMatrix2D(center, angle180, scale)
         warpedImage = cv2.warpAffine(warpedImage, M, (w, h))
         self.image = warpedImage
+        
+        
   
 start = time.time()      
 Vision = Vision_Agent()
 
-j=time.time()-start
+# j=time.time()-start
+# # print(j)
+# f = time.time()
+# Vision.read_image()
+# j=time.time()-f
 # print(j)
-f = time.time()
-Vision.read_image()
-j=time.time()-f
-print(j)
-Vision.get_robot()
-Vision.get_objectives()
-Vision.get_obstacles()
+# Vision.get_robot()
+# Vision.get_objectives()
+# Vision.get_obstacles()
 
-# print(Vision.parcours)
-# print(Vision.get_grid_2_real())
-while(True):
-    # Vision.read_image()
+# # print(Vision.parcours)
+# # print(Vision.get_grid_2_real())
+# while(True):
+#     # Vision.read_image()
     
-    cv2.imshow('Image', Vision.image)   
-    cv2.imshow('Parcours', Vision.parcours)   
-    if cv2.waitKey(1) == ord("q"):
-       break
+#     cv2.imshow('Image', Vision.image)   
+#     cv2.imshow('Parcours', Vision.parcours)   
+#     if cv2.waitKey(1) == ord("q"):
+#        break
    
-cv2.destroyAllWindows()
+# cv2.destroyAllWindows()
