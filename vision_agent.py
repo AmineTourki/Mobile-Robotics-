@@ -318,7 +318,9 @@ class Vision_Agent:
         warpedImage = cv2.warpAffine(warpedImage, M, (w, h))
         self.image = warpedImage
         
-        
+    def visualize(self):
+        cv2.imshow('Image', Vision.image)   
+        cv2.imshow('Parcours', Vision.parcours)
   
 start = time.time()      
 Vision = Vision_Agent()
