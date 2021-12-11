@@ -18,12 +18,13 @@ print(cv2.__version__)
 class Vision_Agent:
     def __init__(self):
         self.converter = 0
-        # self.cam = cv2.VideoCapture(0)
-        # ret, frame = cam.read() 
-        self.image = cv2.imread('parcours2.jpeg')
+        self.cam = cv2.VideoCapture(0)
+        ret, frame = cam.read() 
+        self.image = cv2.imread(frame)
         self.resize()
         self.hsv = cv2.cvtColor(self.image, cv2.COLOR_BGR2HSV)
         self.get_first_image_cam(self.image)
+        self.image = cv2.flip(self.image, 1)
         self.hsv = cv2.cvtColor(self.image, cv2.COLOR_BGR2HSV)
         
         
@@ -45,10 +46,12 @@ class Vision_Agent:
         self.image = cv2.resize(self.image, dim, interpolation = cv2.INTER_AREA)
         
     def read_image(self):
-        self.image = cv2.imread('parcours2.jpeg')
+        ret, frame = cam.read() 
+        self.image = cv2.imread(frame)
         self.resize()
         self.hsv = cv2.cvtColor(self.image, cv2.COLOR_BGR2HSV)
         self.get_image_cam(self.image)
+        self.image = cv2.flip(self.image, 1)
         self.hsv = cv2.cvtColor(self.image, cv2.COLOR_BGR2HSV)
         
        
@@ -112,7 +115,7 @@ class Vision_Agent:
         Canny= cv2.Canny(mask_black,10,50)
         
         #Find my contours
-        contours =cv2.findContours(Canny,cv2.RETR_LIST,cv2.CHAIN_APPROX_SIMPLE)[0]
+        contours =cv2.findContours(Canny,cv2.RETR_LIST,cv2.CHAIN_APPROX_SIMPLE)[1]
         # print(contours)
         
         #Loop through my contours to find rectangles and put them in a list, so i can view them individually later.
@@ -135,7 +138,7 @@ class Vision_Agent:
         Canny=cv2.Canny(mask_green,10,50)
         # self.parcours = mask_red
         #Find my contours
-        contours =cv2.findContours(Canny,cv2.RETR_LIST,cv2.CHAIN_APPROX_SIMPLE)[0]
+        contours =cv2.findContours(Canny,cv2.RETR_LIST,cv2.CHAIN_APPROX_SIMPLE)[1]
         
         for cnt in contours:
             
@@ -152,7 +155,7 @@ class Vision_Agent:
         Canny=cv2.Canny(mask_red,10,50)
         
         #Find my contours
-        contours =cv2.findContours(Canny,cv2.RETR_LIST,cv2.CHAIN_APPROX_SIMPLE)[0]
+        contours =cv2.findContours(Canny,cv2.RETR_LIST,cv2.CHAIN_APPROX_SIMPLE)[1]
         # print(contours)
         
         for cnt in contours:
@@ -277,7 +280,7 @@ class Vision_Agent:
         (h, w) = warpedImage.shape[:2]
         center = (w / 2, h / 2)
         M = cv2.getRotationMatrix2D(center, angle180, scale)
-        warpedImage = cv2.warpAffine(warpedImage, M, (w, h))
+        # warpedImage = cv2.warpAffine(warpedImage, M, (w, h))
         self.image = warpedImage
     
     def get_image_cam(self, image):
@@ -314,8 +317,12 @@ class Vision_Agent:
         M = cv2.getRotationMatrix2D(center, angle180, scale)
         warpedImage = cv2.warpAffine(warpedImage, M, (w, h))
         self.image = warpedImage
+        
+    def visualize(self):
+        cv2.imshow('Image', Vision.image)   
+        cv2.imshow('Parcours', Vision.parcours)
   
-start = time.time()
+# start = time.time()      
 Vision = Vision_Agent()
 
 # j=time.time()-start
@@ -327,15 +334,15 @@ Vision = Vision_Agent()
 # Vision.get_robot()
 # Vision.get_objectives()
 # Vision.get_obstacles()
-#
-# #print(Vision.parcours)
+
+# # print(Vision.parcours)
 # # print(Vision.get_grid_2_real())
 # while(True):
 #     # Vision.read_image()
-#
-#     cv2.imshow('Image', Vision.image)
-#     cv2.imshow('Parcours', Vision.parcours)
+    
+#     cv2.imshow('Image', Vision.image)   
+#     cv2.imshow('Parcours', Vision.parcours)   
 #     if cv2.waitKey(1) == ord("q"):
-#        break
-#
+#         break
+   
 # cv2.destroyAllWindows()
