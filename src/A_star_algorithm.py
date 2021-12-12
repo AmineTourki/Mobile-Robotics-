@@ -181,6 +181,35 @@ def run_A_Star(occupancy_grid, start, goal):
     path, visitedNodes = A_Star(tuple(start), tuple(goal), h, coords, occupancy_grid, movement_type="8N")
     path = np.array(path)
     visitedNodes = np.array(visitedNodes).reshape(-1, 2).transpose()
+    plot_path(occupancy_grid, visited_nodes, start, goal, path)
 
     return path, visitedNodes
+
+
+def plot_path(occupancy_grid,visited_nodes,start,goal,path):
+
+
+    fig, ax = plt.subplots(figsize=(8, 8))
+
+    major_ticks = np.arange(0, 51, 5)
+    minor_ticks = np.arange(0, 51, 1)
+    ax.set_xticks(major_ticks)
+    ax.set_xticks(minor_ticks, minor=True)
+    ax.set_yticks(major_ticks)
+    ax.set_yticks(minor_ticks, minor=True)
+    ax.grid(which='minor', alpha=0.2)
+    ax.grid(which='major', alpha=0.5)
+    ax.set_ylim([50, -1])
+    ax.set_xlim([-1, 50])
+    ax.grid(True)
+
+    path_plot = np.array(path).reshape(-1, 2).transpose()
+
+    plt.imshow(occupancy_grid.transpose(), cmap=colors.ListedColormap(['white', 'black']));
+    plt.scatter(visited_nodes[0], visited_nodes[1], marker="o", color='orange', s=5)
+    plt.plot(path_plot[0], path_plot[1], color='blue');
+    plt.scatter(goal[0], goal[1], marker="X", color='red', s=200);
+    plt.scatter(start[0], start[1], marker="o", color='green', s=200)
+    # plt.title("A* path planning with a green\n checkpoint and a red goal");
+    plt.savefig('A_star_plot.png')
 
