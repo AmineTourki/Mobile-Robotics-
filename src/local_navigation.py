@@ -1,108 +1,85 @@
-# ******** IMPORTS ********
-import numpy as np
-import utils
-import time
 import math as m
-from vision_agent import Vision
-import cv2
-# ******** CONSTANTS ********
+from navigation import callKalman
 
-THRESHOLD_SIDE = 100  # threshold setting the distance to the wall before going away of it
-THRESHOLD_OBST = 2250  # threshold for entering in local navigation
-TIME_FORWARD = 2  # time in seconds going away from obstacle before new computation
+OBSTACLE_TH_MIN = 2500
+OBSTACLE_TH_MAX = 5000
+ROTATION_FRONT = m.pi / 3
+ROTATION_MIDDLE = m.pi / 4
+ROTATION_SIDE = m.pi / 9
+LOCAL_FORWARD = 0.1  # seconds
 
 
-# ******** FUNCTIONS ********
-
-def obstacle_avoidance(myRobot, prox_sens):
+def detect_obstacle(prox_sensors):
     """
-    The robot avoid the obstacle by turning on himself until the obstacle is not detected
-    then goes forward
-    :param
-        myRobot: our robot
-        prox_sens: values of the proximity sensors
-    :return:
-        Ts: time spent going forward
+    Detect obstacle
+    :param prox_sensors: proximity sensors values (from sensor 0 to 4)
+    :return: True if obstacle detected, False otherwise
     """
-    # The obstacle is on the left - > rotate right
-    if (prox_sens[0] + prox_sens[1]) > (prox_sens[4] + prox_sens[3]):
-        Ts = bypass("right", prox_sens, myRobot)
-    # The obstacle is on the right - > rotate left
+    for sensor in prox_sensors:
+        if sensor > OBSTACLE_TH_MIN:
+            return True
+    return False
+
+
+def correct_sensor_val(sensor_val):
+    """
+    correct sensor value to avoid values out of the expected range.
+    :param sensor_val: value of the proximity sensor
+    :return: sensor_val: corrected value
+    """
+    # correct sensor val to avoid division by zero and false rotation angles
+    if sensor_val <= 0:
+        sensor_val = 1
+    elif sensor_val > OBSTACLE_TH_MAX:
+        sensor_val = OBSTACLE_TH_MAX
+    return sensor_val
+
+
+def sensor_to_angle(side_sensor, middle_sensor, front_sensor):
+    """
+    calculate the angle by which the robot should rotate for one side
+    (right or left)
+    :param side_sensor: value of the sensor on the side
+    :param middle_sensor: value of the sensor on the front
+    :return: rotation angle in radians
+    """
+    side_sensor = correct_sensor_val(side_sensor)
+    middle_sensor = correct_sensor_val(middle_sensor)
+    front_sensor = correct_sensor_val(front_sensor)
+
+    sum_sensors = side_sensor + middle_sensor + front_sensor
+    return side_sensor / sum_sensors * ROTATION_SIDE + middle_sensor / sum_sensors * ROTATION_MIDDLE + front_sensor / sum_sensors * ROTATION_FRONT
+
+
+def rotation_angle(prox_sensors):
+    """
+    calculate the angle by which to rotate the robot
+    :param prox_sensors: sensors values (from sensor 0 to 4)
+    :return: rotation angle in radians
+    """
+    angle_right = sensor_to_angle(prox_sensors[4], prox_sensors[3], prox_sensors[2])
+    angle_left = sensor_to_angle(prox_sensors[0], prox_sensors[1], prox_sensors[2])
+    if prox_sensors[0] + prox_sensors[1] > prox_sensors[3] + prox_sensors[4]:
+        return angle_left
     else:
-        Ts = bypass("left", prox_sens, myRobot)
-
-    return Ts
+        return -angle_right
 
 
-def bypass(direction, prox_sens, myRobot):
+def avoid_obstacle(myRobot, Vision):
     """
-    Bypass the obstacle by turning on himself until the obstacle is not detected
-    then goes forward
-    :param
-        direction: direction of the rotation
-         prox_sens: values of the proximity sensors
-        myRobot: our robot
-    :return:
-        Ts: time spent going forward
+    main function in local navigation to avoid obstacles
+    :param myRobot: robot instance
+    :param Vision: vision instance
+    :return: True if local navigation occurs, False otherwise
     """
-    reset_timer = 1  # to start the timer only the first time one enter into the loop
-    # the robot turn on himself until the sensor don't detect the obstacle
-    while sum(prox_sens[i] > THRESHOLD_SIDE for i in range(0, 5)) > 0:
-        Vision.read_image()
-        cv2.imwrite("image_end.png", Vision.image)
-        myRobot.motor_rotate(direction)
-
-        if reset_timer:
-            t_start = time.perf_counter()
-            reset_timer = 0
-
-        prox_sens = myRobot.th["prox.horizontal"]
-        if sum(prox_sens[i] > THRESHOLD_SIDE for i in range(0, 5)) == 0:
-            # Stop the timer
-            t_stop = time.perf_counter()
-            turning_time = t_stop - t_start
-            # Computes the angle variation
-            dtheta = turning_time * 2 * m.pi / utils.FULLROTATIONTIME
-            # Update theta
-            if direction == "right":  # Opposite from convention
-                theta = myRobot.get_angle() + dtheta
-            else:
-                theta = myRobot.get_angle() - dtheta
-
-            myRobot.set_theta(theta)
-
-            # Go forward
-            Ts = local_forward(myRobot)
-
-    return Ts
-
-
-def local_forward(myRobot):
-    """
-    Go forward for TIME_FORWARD seconds or until an obstacle is detected
-    :param myRobot: our robot
-    :return:
-        Ts: time spent going forward
-    """
-    # Set motors speed to go forward
-    myRobot.motor_forward()
-
-    # Increment time counter while checking for obstacles
-    step_forward = TIME_FORWARD / 16
-    nb_step = 0
-    for i in range(16):
-        # To visualise the robot while moving
-        Vision.read_image()
-        cv2.imwrite("image_end.png", Vision.image)
-        # Break if an obstacle is detected
-        prox = myRobot.th["prox.horizontal"]
-        if sum(prox[i] > THRESHOLD_SIDE for i in range(0, 5)):
-            break
-        time.sleep(step_forward)
-        nb_step = nb_step + 1
-
-    myRobot.motor_stop()
-
-    # Compute time forward
-    Ts = nb_step * step_forward
-    return Ts
+    prox_sensors = myRobot.th["prox.horizontal"]
+    if not detect_obstacle(prox_sensors):
+        return False
+    while detect_obstacle(prox_sensors):
+        myRobot.motor_stop()
+        angle = rotation_angle(prox_sensors)
+        myRobot.motor_rotate(angle)
+        myRobot.forward(LOCAL_FORWARD)
+        callKalman(myRobot, Vision, LOCAL_FORWARD)
+        prox_sensors = myRobot.th["prox.horizontal"]
+    return True

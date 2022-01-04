@@ -6,9 +6,10 @@ Created on Sun Dec  5 08:56:47 2021
 """
 import cv2
 import numpy as np
-import pygame
 import math
 import time
+from shapely.geometry import Polygon
+
 
 class Vision_Agent:
     def __init__(self):
@@ -18,11 +19,11 @@ class Vision_Agent:
         self.image = frame
         self.resize()
         self.hsv = cv2.cvtColor(self.image, cv2.COLOR_BGR2HSV)
-        # self.get_first_image_cam(self.image)
+        self.get_first_image_cam(self.image)
         # self.image = cv2.flip(self.image, 1)
         # self.image = cv2.flip(self.image, 0)
         self.hsv = cv2.cvtColor(self.image, cv2.COLOR_BGR2HSV)
-        self.path=[]
+        self.path = []
         self.angle = 0
         self.center_robot = [0, 0]
         self.parcours = np.zeros((50, 50), np.uint8)
@@ -41,11 +42,14 @@ class Vision_Agent:
         self.image = cv2.resize(self.image, dim, interpolation=cv2.INTER_AREA)
 
     def read_image(self):
-        ret, frame = self.cam.read()
-        self.image = frame
-        self.resize()
+        try:
+            ret, frame = self.cam.read()
+            self.image = frame
+            self.resize()
+        except:
+            print("Camera not found")
         self.hsv = cv2.cvtColor(self.image, cv2.COLOR_BGR2HSV)
-        # self.get_image_cam(self.image)
+        self.get_image_cam(self.image)
         # self.image = cv2.flip(self.image, 1)
         # self.image = cv2.flip(self.image, 0)
         self.hsv = cv2.cvtColor(self.image, cv2.COLOR_BGR2HSV)
@@ -65,22 +69,25 @@ class Vision_Agent:
 
     def print_path(self):
         for node in self.path:
-            cv2.circle(self.image, (int(node[0] * self.parcours_2_pix[0]), int(node[1] * self.parcours_2_pix[1])), 1,(255, 0, 0), 2)
+            cv2.circle(self.image, (int(node[0] * self.parcours_2_pix[0]), int(node[1] * self.parcours_2_pix[1])), 1,
+                       (255, 0, 0), 2)
+
     def get_robot(self):
 
         mask_blue = self.mask_thresh(self.hsv, [100, 87, 65], [164, 255, 180])
-        kernel = np.ones((3,3),np.uint8)
+        kernel = np.ones((3, 3), np.uint8)
         mask_blue = cv2.morphologyEx(mask_blue, cv2.MORPH_OPEN, kernel)
         try:
-            circles = cv2.HoughCircles(mask_blue, cv2.HOUGH_GRADIENT, 2, 10, param1=30, param2=10, minRadius=4, maxRadius=7)
+            circles = cv2.HoughCircles(mask_blue, cv2.HOUGH_GRADIENT, 2, 10, param1=30, param2=10, minRadius=4,
+                                       maxRadius=7)
         except:
             return False
 
         detected_circles = np.uint16(np.around(circles))
         center_points = []
         rayons = []
-        self.center_robot=[0,0]
-        if len(detected_circles[0])==2:
+        self.center_robot = [0, 0]
+        if len(detected_circles[0]) == 2:
             for (x, y, r) in detected_circles[0, :]:
                 cv2.circle(self.image, (x, y), r, (0, 255, 0), 3)
                 rayons += [r]
@@ -90,7 +97,6 @@ class Vision_Agent:
 
             vec1 = 0
             vec2 = 0
-
 
             if (rayons[0] > rayons[1]):
                 vec1 = center_points[2].astype('int64') - center_points[0].astype('int64')
@@ -102,20 +108,19 @@ class Vision_Agent:
             self.r_in_pix = math.sqrt(vec1 ** 2 + vec2 ** 2)
             self.angle = math.atan2(vec2, vec1) * 180 / math.pi
             cv2.circle(self.image, (int(self.center_robot[0]), int(self.center_robot[1])), 2, (0, 255, 200), 3)
-            self.center_robot = [float(self.center_robot[0] / Vision.parcours_2_pix[0]),
-                                 float(self.center_robot[1] / Vision.parcours_2_pix[1])]
-            print("pos dans get robot", self.center_robot)
+            self.center_robot = [float(self.center_robot[0] / self.parcours_2_pix[0]),
+                                 float(self.center_robot[1] / self.parcours_2_pix[1])]
+            # print("pos dans get robot", self.center_robot)
             return True
         else:
             return False
-
 
     def get_obstacles(self):
         self.parcours = np.zeros((50, 50), np.uint8)
 
         mask_black = self.mask_thresh(self.hsv, [0, 0, 0], [180, 255, 50])
 
-        kernel = np.ones((12, 12), np.uint8)
+        kernel = np.ones((14, 14), np.uint8)
         mask_black = cv2.morphologyEx(mask_black, cv2.MORPH_OPEN, kernel)
         Canny = cv2.Canny(mask_black, 10, 50)
 
@@ -152,8 +157,8 @@ class Vision_Agent:
             cv2.circle(self.image, (int(x + w / 2), int(y + h / 2)), 7, (255, 255, 255), -1)
 
             self.objective_green = (x + w / 2, y + h / 2)
-            self.objective_green = [math.floor(float(self.objective_green[0] / Vision.parcours_2_pix[0])),
-                                    math.floor(float(self.objective_green[1] / Vision.parcours_2_pix[1]))]
+            self.objective_green = [math.floor(float(self.objective_green[0] / self.parcours_2_pix[0])),
+                                    math.floor(float(self.objective_green[1] / self.parcours_2_pix[1]))]
             cv2.rectangle(self.image, (x, y), (x + w, y + h), (0, 0, 0), 2)
 
         Canny = cv2.Canny(mask_red, 10, 50)
@@ -166,8 +171,8 @@ class Vision_Agent:
             x, y, w, h = cv2.boundingRect(cnt)
             cv2.circle(self.image, (int(x + w / 2), int(y + h / 2)), 7, (255, 255, 255), -1)
             self.objective_red = (x + w / 2, y + h / 2)
-            self.objective_red = [math.floor(float(self.objective_red[0] / Vision.parcours_2_pix[0])),
-                                  math.floor(float(self.objective_red[1] / Vision.parcours_2_pix[1]))]
+            self.objective_red = [math.floor(float(self.objective_red[0] / self.parcours_2_pix[0])),
+                                  math.floor(float(self.objective_red[1] / self.parcours_2_pix[1]))]
 
             cv2.rectangle(self.image, (x, y), (x + w, y + h), (0, 0, 0), 2)
 
@@ -179,7 +184,6 @@ class Vision_Agent:
         return an_array * self.get_pix_2_real()
 
     def update(self):
-        self.read_image()
         self.get_robot()
         self.get_objectives()
         self.get_obstacles()
@@ -224,10 +228,42 @@ class Vision_Agent:
                 self.minY = y
             if y > self.maxY:
                 self.maxY = y
+        center_x = 0
+        center_y = 0
+        for i in range(len(polygon[0])):
+            x = polygon[0][i][0]
+            y = polygon[0][i][1]
+            center_x += x / 4
+            center_y += y / 4
+            if (x <= polygon[0][0][0] - 10 and y <= polygon[0][0][1] - 10):
+                register = polygon[0][0]
+                polygon[0][0] = polygon[0][i]
+                # print("yo1")
+                polygon[0][i] = register
+            if (x <= polygon[0][1][0] - 10 and y >= polygon[0][1][1] - 10):
+                register = polygon[0][1]
+                polygon[0][1] = polygon[0][i]
+                polygon[0][i] = register
+                # print("yo2")
 
-        register = polygon[0][1]
-        polygon[0][1] = polygon[0][0]
-        polygon[0][0] = register
+            if (x >= polygon[0][2][0] - 10 and y >= polygon[0][2][1] - 10):
+                register = polygon[0][2]
+                polygon[0][2] = polygon[0][i]
+                polygon[0][i] = register
+                # print("yo3")
+
+            if (x >= polygon[0][3][0] - 10 and y <= polygon[0][3][1] - 10):
+                register = polygon[0][3]
+                polygon[0][3] = polygon[0][i]
+                polygon[0][i] = register
+                # print("yo4")
+
+        if not Polygon(np.array(polygon[0])).is_valid:
+            # print("you")
+            register = polygon[0][3]
+            polygon[0][3] = polygon[0][0]
+            polygon[0][0] = register
+
         # Go over the points in the image if they are out side of the enclosing rectangle put zero
         # if not check if they are inside the polygon or not
         self.polygon = polygon
@@ -240,11 +276,11 @@ class Vision_Agent:
                 if x < self.minX or x > self.maxX or y < self.minY or y > self.maxY:
                     continue
 
-                if cv2.pointPolygonTest(np.asarray(polygon[0]), (x, y), False) >= 0:
-                    cropedImage[y, x, 0] = image[y, x, 0]
-                    cropedImage[y, x, 1] = image[y, x, 1]
-                    cropedImage[y, x, 2] = image[y, x, 2]
-                    mask_im[y, x] = 1
+                # if cv2.pointPolygonTest(np.asarray(polygon[0]), (x, y), False) >= 0:
+                cropedImage[y, x, 0] = image[y, x, 0]
+                cropedImage[y, x, 1] = image[y, x, 1]
+                cropedImage[y, x, 2] = image[y, x, 2]
+                mask_im[y, x] = 1
 
         # Now we can crop again just the enveloping rectangle
         self.mask_im = mask_im
@@ -280,7 +316,7 @@ class Vision_Agent:
         center = (w / 2, h / 2)
         M = cv2.getRotationMatrix2D(center, angle180, scale)
         # warpedImage = cv2.warpAffine(warpedImage, M, (w, h))
-        self.image = warpedImage
+        self.image = finalImage
 
     def get_image_cam(self, image):
 
@@ -305,14 +341,14 @@ class Vision_Agent:
         center = (w / 2, h / 2)
         M = cv2.getRotationMatrix2D(center, angle180, scale)
         warpedImage = cv2.warpAffine(warpedImage, M, (w, h))
-        self.image = warpedImage
+        self.image = finalImage
 
-    def visualize(self):
-        cv2.imshow('Image', Vision.image)
-        cv2.imshow('Parcours', Vision.parcours)
+    def read_save_image(self, title):
+        self.read_image()
+        cv2.imwrite(title, self.image)
 
+# Vision=Vision_Agent()
 
-Vision = Vision_Agent()
 # Vision.read_image()
 # Vision.get_robot()
 # Vision.get_objectives()
