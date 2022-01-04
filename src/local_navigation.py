@@ -1,12 +1,12 @@
 import math as m
-from navigation import callKalman
+import navigation
 
 OBSTACLE_TH_MIN = 2500
 OBSTACLE_TH_MAX = 5000
 ROTATION_FRONT = m.pi / 3
 ROTATION_MIDDLE = m.pi / 4
 ROTATION_SIDE = m.pi / 9
-LOCAL_FORWARD = 0.1  # seconds
+LOCAL_FORWARD = 0.2  # seconds
 
 
 def detect_obstacle(prox_sensors):
@@ -79,7 +79,7 @@ def avoid_obstacle(myRobot, Vision):
         myRobot.motor_stop()
         angle = rotation_angle(prox_sensors)
         myRobot.motor_rotate(angle)
-        myRobot.forward(LOCAL_FORWARD)
-        callKalman(myRobot, Vision, LOCAL_FORWARD)
+        myRobot.motor_forward(LOCAL_FORWARD)
+        navigation.callKalman(myRobot, Vision, LOCAL_FORWARD)
         prox_sensors = myRobot.th["prox.horizontal"]
     return True

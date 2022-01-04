@@ -10,6 +10,7 @@ import math
 import time
 from shapely.geometry import Polygon
 
+GRID_SIZE = 40
 
 class Vision_Agent:
     def __init__(self):
@@ -26,8 +27,8 @@ class Vision_Agent:
         self.path = []
         self.angle = 0
         self.center_robot = [0, 0]
-        self.parcours = np.zeros((50, 50), np.uint8)
-        self.parcours_2_pix = [len(self.image[0]) / 50, len(self.image) / 50]
+        self.parcours = np.zeros((GRID_SIZE, GRID_SIZE), np.uint8)
+        self.parcours_2_pix = [len(self.image[0]) / GRID_SIZE, len(self.image) / GRID_SIZE]
         self.objective_red = None
         self.objective_green = None
         self.r_in_pix = 0
@@ -116,7 +117,7 @@ class Vision_Agent:
             return False
 
     def get_obstacles(self):
-        self.parcours = np.zeros((50, 50), np.uint8)
+        self.parcours = np.zeros((GRID_SIZE, GRID_SIZE), np.uint8)
 
         mask_black = self.mask_thresh(self.hsv, [0, 0, 0], [180, 255, 50])
 
