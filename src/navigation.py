@@ -47,7 +47,7 @@ def closest_node_index(current_pos, path, old_index):
     """
     # check the nodes from old index and ahead and get the index of the closest node to our current position
     closestnode_index = old_index + np.linalg.norm(current_pos - path[old_index:], axis=1).argmin()
-    # only change the orientation if the robot is closest to his next node compared to the initial node
+    # only change the orientation if the robot is closer to his next node compared to the initial node
     # don't change angle if already close to goal (goal index ==len(path) - 1)
     change_angle = (closestnode_index != old_index) and (closestnode_index != len(path) - 1)
     return change_angle, closestnode_index
@@ -84,7 +84,7 @@ def follow_path(myRobot, Vision, path):
             next_pos = path[closest_index + 1]
             # rotate to face the new target node next_pos
             change_orientation(myRobot, next_pos)
-        # go forward GLOBAL_FORWARD(0.1) seconds
+        # go forward GLOBAL_FORWARD(0.2) seconds
         myRobot.motor_forward(GLOBAL_FORWARD)
         # estimate new position and update myRobot pose
         callKalman(myRobot, Vision, GLOBAL_FORWARD)

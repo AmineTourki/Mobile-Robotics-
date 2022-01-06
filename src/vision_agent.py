@@ -21,8 +21,6 @@ class Vision_Agent:
         self.resize()
         self.hsv = cv2.cvtColor(self.image, cv2.COLOR_BGR2HSV)
         self.get_first_image_cam(self.image)
-        # self.image = cv2.flip(self.image, 1)
-        # self.image = cv2.flip(self.image, 0)
         self.hsv = cv2.cvtColor(self.image, cv2.COLOR_BGR2HSV)
         self.path = []
         self.angle = 0
