@@ -1,6 +1,8 @@
+# ******** IMPORTS ********
 import math as m
 import navigation
 
+# ******** CONSTANTS ********
 OBSTACLE_TH_MIN = 2500
 OBSTACLE_TH_MAX = 5000
 ROTATION_FRONT = m.pi / 3
@@ -8,7 +10,7 @@ ROTATION_MIDDLE = m.pi / 4
 ROTATION_SIDE = m.pi / 9
 LOCAL_FORWARD = 0.2  # seconds
 
-
+# ******** FUNCTIONS ********
 def detect_obstacle(prox_sensors):
     """
     Detect obstacle
