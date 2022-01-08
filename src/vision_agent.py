@@ -49,8 +49,6 @@ class Vision_Agent:
             print("Camera not found")
         self.hsv = cv2.cvtColor(self.image, cv2.COLOR_BGR2HSV)
         self.get_image_cam(self.image)
-        # self.image = cv2.flip(self.image, 1)
-        # self.image = cv2.flip(self.image, 0)
         self.hsv = cv2.cvtColor(self.image, cv2.COLOR_BGR2HSV)
 
     def mask_thresh(self, image, thresh_low, thresh_high):
@@ -109,7 +107,6 @@ class Vision_Agent:
             cv2.circle(self.image, (int(self.center_robot[0]), int(self.center_robot[1])), 2, (0, 255, 200), 3)
             self.center_robot = [float(self.center_robot[0] / self.parcours_2_pix[0]),
                                  float(self.center_robot[1] / self.parcours_2_pix[1])]
-            # print("pos dans get robot", self.center_robot)
             return True
         else:
             return False
@@ -125,7 +122,6 @@ class Vision_Agent:
 
         # Find my contours
         contours = cv2.findContours(Canny, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)[0]
-        # print(contours)
 
         # Loop through my contours to find rectangles and put them in a list, so i can view them individually later.
         for cnt in contours:
@@ -164,7 +160,6 @@ class Vision_Agent:
 
         # Find my contours
         contours = cv2.findContours(Canny, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)[0]
-        # print(contours)
 
         for cnt in contours:
             x, y, w, h = cv2.boundingRect(cnt)
@@ -237,28 +232,23 @@ class Vision_Agent:
             if (x <= polygon[0][0][0] - 10 and y <= polygon[0][0][1] - 10):
                 register = polygon[0][0]
                 polygon[0][0] = polygon[0][i]
-                # print("yo1")
                 polygon[0][i] = register
             if (x <= polygon[0][1][0] - 10 and y >= polygon[0][1][1] - 10):
                 register = polygon[0][1]
                 polygon[0][1] = polygon[0][i]
                 polygon[0][i] = register
-                # print("yo2")
 
             if (x >= polygon[0][2][0] - 10 and y >= polygon[0][2][1] - 10):
                 register = polygon[0][2]
                 polygon[0][2] = polygon[0][i]
                 polygon[0][i] = register
-                # print("yo3")
 
             if (x >= polygon[0][3][0] - 10 and y <= polygon[0][3][1] - 10):
                 register = polygon[0][3]
                 polygon[0][3] = polygon[0][i]
                 polygon[0][i] = register
-                # print("yo4")
 
         if not Polygon(np.array(polygon[0])).is_valid:
-            # print("you")
             register = polygon[0][3]
             polygon[0][3] = polygon[0][0]
             polygon[0][0] = register
@@ -314,16 +304,10 @@ class Vision_Agent:
         (h, w) = warpedImage.shape[:2]
         center = (w / 2, h / 2)
         M = cv2.getRotationMatrix2D(center, angle180, scale)
-        # warpedImage = cv2.warpAffine(warpedImage, M, (w, h))
-        self.image = finalImage
+        warpedImage = cv2.warpAffine(warpedImage, M, (w, h))
+        self.image = warpedImage
 
     def get_image_cam(self, image):
-
-        polygon = self.polygon
-        cropedImage = np.zeros_like(image)
-
-        f = time.time()
-
         # get first masked value (foreground)
         cropedImage = cv2.bitwise_or(image, image, mask=self.mask_im)
 
@@ -340,25 +324,8 @@ class Vision_Agent:
         center = (w / 2, h / 2)
         M = cv2.getRotationMatrix2D(center, angle180, scale)
         warpedImage = cv2.warpAffine(warpedImage, M, (w, h))
-        self.image = finalImage
+        self.image = warpedImage
 
     def read_save_image(self, title):
         self.read_image()
         cv2.imwrite(title, self.image)
-
-# Vision=Vision_Agent()
-
-# Vision.read_image()
-# Vision.get_robot()
-# Vision.get_objectives()
-# Vision.get_obstacles()
-
-# while (True):
-#    # Vision.read_image()
-#
-#     cv2.imshow('Image', Vision.image)
-#     cv2.imshow('Parcours', Vision.parcours)
-#     if cv2.waitKey(1) == ord("q"):
-#         break
-# Vision.cam.release()
-# cv2.destroyAllWindows()
